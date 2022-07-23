@@ -87,114 +87,141 @@ class EventConfigGetShutterSpeed : Event(26)
 {
 }
 
-class EventConfigSetShutterSpeed : Event(27)
+class EventConfigGetChoicesShutterSpeed : Event(27)
+{
+}
+
+class EventConfigSetShutterSpeed : Event(28)
 {
     @SerializedName("shutter_speed" ) var shutterSpeed : Int? = null
 }
 
-class EventConfigValueShutterSpeed : Event(28)
+class EventConfigValueShutterSpeed : Event(29)
 {
     @SerializedName("shutter_speed" ) var shutterSpeed : Int? = null
     @SerializedName("bulb" ) var bulb : Boolean? = null
 }
 
-class EventConfigGetAperture : Event(29)
+class EventConfigChoicesShutterSpeed : Event(30)
+{
+    @SerializedName("shutter_speed_choices" ) var shutterSpeedChoices : ArrayList<Int>? = null
+}
+
+class EventConfigGetAperture : Event(31)
 {
 }
 
-class EventConfigSetAperture : Event(30)
+class EventConfigGetChoicesAperture : Event(32)
+{
+}
+
+class EventConfigSetAperture : Event(33)
 {
     @SerializedName("aperture" ) var aperture : Int? = null
 }
 
-class EventConfigValueAperture : Event(31)
+class EventConfigValueAperture : Event(34)
 {
     @SerializedName("aperture" ) var aperture : Int? = null
 }
 
-class EventConfigGetISO : Event(32)
+class EventConfigChoicesAperture : Event(35)
+{
+    @SerializedName("aperture_choices" ) var apertureChoices : ArrayList<Int>? = null
+}
+
+class EventConfigGetISO : Event(36)
 {
 }
 
-class EventConfigSetISO : Event(33)
+class EventConfigGetChoicesISO : Event(37)
+{
+}
+
+class EventConfigSetISO : Event(38)
 {
     @SerializedName("iso" ) var iso : Int? = null
 }
 
-class EventConfigValueISO : Event(34)
+class EventConfigValueISO : Event(39)
 {
     @SerializedName("iso" ) var iso : Int? = null
 }
 
-class EventConfigGetBattery : Event(35)
+class EventConfigChoicesISO : Event(40)
+{
+    @SerializedName("iso_choices" ) var isoChoices : ArrayList<Int>? = null
+}
+
+class EventConfigGetBattery : Event(41)
 {
 }
 
-class EventConfigValueBattery : Event(36)
+class EventConfigValueBattery : Event(42)
 {
     @SerializedName("battery" ) var battery : Int? = null
 }
 
-class EventConfigGetFocalLength : Event(37)
+class EventConfigGetFocalLength : Event(43)
 {
 }
 
-class EventConfigValueFocalLength : Event(38)
+class EventConfigValueFocalLength : Event(44)
 {
     @SerializedName("focal_length" ) var focalLength : Int? = null
 }
 
-class EventConfigGetFocusMode : Event(39)
+class EventConfigGetFocusMode : Event(45)
 {
 }
 
-class EventConfigValueFocusMode : Event(40)
+class EventConfigValueFocusMode : Event(46)
 {
     @SerializedName("focus_mode" ) var focusMode : String? = null
 }
 
-class EventConfigGetLongExpNR : Event(41)
+class EventConfigGetLongExpNR : Event(47)
 {
 }
 
-class EventConfigValueLongExpNR : Event(42)
+class EventConfigValueLongExpNR : Event(48)
 {
     @SerializedName("long_exp_nr" ) var longExpNr : Boolean? = null
 }
 
-class EventConfigGetVibRed : Event(43)
+class EventConfigGetVibRed : Event(49)
 {
 }
 
-class EventConfigValueVibRed : Event(44)
+class EventConfigValueVibRed : Event(50)
 {
     @SerializedName("vr" ) var vr : Boolean? = null
 }
 
-class EventConfigGetCaptureTarget : Event(45)
+class EventConfigGetCaptureTarget : Event(51)
 {
 }
 
-class EventConfigSetCaptureTarget : Event(46)
-{
-    @SerializedName("target" ) var target : String? = null
-}
-
-class EventConfigValueCaptureTarget : Event(47)
+class EventConfigSetCaptureTarget : Event(52)
 {
     @SerializedName("target" ) var target : String? = null
 }
 
-class EventConfigGetCameraMode : Event(48)
-{
-}
-
-class EventConfigValueCameraMode : Event(49)
+class EventConfigValueCaptureTarget : Event(53)
 {
     @SerializedName("target" ) var target : String? = null
 }
 
-class EventConfigGetCommon : Event(50)
+class EventConfigGetCameraMode : Event(54)
+{
+}
+
+class EventConfigValueCameraMode : Event(55)
+{
+    @SerializedName("target" ) var target : String? = null
+}
+
+class EventConfigGetCommon : Event(56)
 {
 }
 
@@ -223,30 +250,36 @@ fun jsonToEvent(json: String) : Event?
         24 -> return gson.fromJson(json, EventCameraCaptureDone::class.java)
         25 -> return gson.fromJson(json, EventCameraControllerState::class.java)
         26 -> return gson.fromJson(json, EventConfigGetShutterSpeed::class.java)
-        27 -> return gson.fromJson(json, EventConfigSetShutterSpeed::class.java)
-        28 -> return gson.fromJson(json, EventConfigValueShutterSpeed::class.java)
-        29 -> return gson.fromJson(json, EventConfigGetAperture::class.java)
-        30 -> return gson.fromJson(json, EventConfigSetAperture::class.java)
-        31 -> return gson.fromJson(json, EventConfigValueAperture::class.java)
-        32 -> return gson.fromJson(json, EventConfigGetISO::class.java)
-        33 -> return gson.fromJson(json, EventConfigSetISO::class.java)
-        34 -> return gson.fromJson(json, EventConfigValueISO::class.java)
-        35 -> return gson.fromJson(json, EventConfigGetBattery::class.java)
-        36 -> return gson.fromJson(json, EventConfigValueBattery::class.java)
-        37 -> return gson.fromJson(json, EventConfigGetFocalLength::class.java)
-        38 -> return gson.fromJson(json, EventConfigValueFocalLength::class.java)
-        39 -> return gson.fromJson(json, EventConfigGetFocusMode::class.java)
-        40 -> return gson.fromJson(json, EventConfigValueFocusMode::class.java)
-        41 -> return gson.fromJson(json, EventConfigGetLongExpNR::class.java)
-        42 -> return gson.fromJson(json, EventConfigValueLongExpNR::class.java)
-        43 -> return gson.fromJson(json, EventConfigGetVibRed::class.java)
-        44 -> return gson.fromJson(json, EventConfigValueVibRed::class.java)
-        45 -> return gson.fromJson(json, EventConfigGetCaptureTarget::class.java)
-        46 -> return gson.fromJson(json, EventConfigSetCaptureTarget::class.java)
-        47 -> return gson.fromJson(json, EventConfigValueCaptureTarget::class.java)
-        48 -> return gson.fromJson(json, EventConfigGetCameraMode::class.java)
-        49 -> return gson.fromJson(json, EventConfigValueCameraMode::class.java)
-        50 -> return gson.fromJson(json, EventConfigGetCommon::class.java)
+        27 -> return gson.fromJson(json, EventConfigGetChoicesShutterSpeed::class.java)
+        28 -> return gson.fromJson(json, EventConfigSetShutterSpeed::class.java)
+        29 -> return gson.fromJson(json, EventConfigValueShutterSpeed::class.java)
+        30 -> return gson.fromJson(json, EventConfigChoicesShutterSpeed::class.java)
+        31 -> return gson.fromJson(json, EventConfigGetAperture::class.java)
+        32 -> return gson.fromJson(json, EventConfigGetChoicesAperture::class.java)
+        33 -> return gson.fromJson(json, EventConfigSetAperture::class.java)
+        34 -> return gson.fromJson(json, EventConfigValueAperture::class.java)
+        35 -> return gson.fromJson(json, EventConfigChoicesAperture::class.java)
+        36 -> return gson.fromJson(json, EventConfigGetISO::class.java)
+        37 -> return gson.fromJson(json, EventConfigGetChoicesISO::class.java)
+        38 -> return gson.fromJson(json, EventConfigSetISO::class.java)
+        39 -> return gson.fromJson(json, EventConfigValueISO::class.java)
+        40 -> return gson.fromJson(json, EventConfigChoicesISO::class.java)
+        41 -> return gson.fromJson(json, EventConfigGetBattery::class.java)
+        42 -> return gson.fromJson(json, EventConfigValueBattery::class.java)
+        43 -> return gson.fromJson(json, EventConfigGetFocalLength::class.java)
+        44 -> return gson.fromJson(json, EventConfigValueFocalLength::class.java)
+        45 -> return gson.fromJson(json, EventConfigGetFocusMode::class.java)
+        46 -> return gson.fromJson(json, EventConfigValueFocusMode::class.java)
+        47 -> return gson.fromJson(json, EventConfigGetLongExpNR::class.java)
+        48 -> return gson.fromJson(json, EventConfigValueLongExpNR::class.java)
+        49 -> return gson.fromJson(json, EventConfigGetVibRed::class.java)
+        50 -> return gson.fromJson(json, EventConfigValueVibRed::class.java)
+        51 -> return gson.fromJson(json, EventConfigGetCaptureTarget::class.java)
+        52 -> return gson.fromJson(json, EventConfigSetCaptureTarget::class.java)
+        53 -> return gson.fromJson(json, EventConfigValueCaptureTarget::class.java)
+        54 -> return gson.fromJson(json, EventConfigGetCameraMode::class.java)
+        55 -> return gson.fromJson(json, EventConfigValueCameraMode::class.java)
+        56 -> return gson.fromJson(json, EventConfigGetCommon::class.java)
 
 
         else -> return null

@@ -27,13 +27,13 @@ class ConnectedFragment : Fragment() {
         _binding = FragmentConnectedBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-//        socketViewModel.getConnected().observe(viewLifecycleOwner) {connected ->
-//            if(!connected)
-//            {
-//                val action = ConnectedFragmentDirections.actionConnectedFragmentToConnectionFragment()
-//                view?.findNavController()?.navigate(action)
-//            }
-//        }
+        socketViewModel.getConnected().observe(viewLifecycleOwner) {connected ->
+            if(!connected)
+            {
+                val action = ConnectedFragmentDirections.actionConnectedFragmentToConnectionFragment()
+                view?.findNavController()?.navigate(action)
+            }
+        }
 
         return root
     }

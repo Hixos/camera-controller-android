@@ -3,6 +3,8 @@ package it.hixos.cameracontroller
 import android.util.JsonReader
 import android.util.Log
 import androidx.lifecycle.*
+import com.google.gson.Gson
+import com.google.gson.JsonIOException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import org.json.JSONException
@@ -25,6 +27,11 @@ class SocketViewModel() : ViewModel() {
     fun getShutterSpeed() : LiveData<Int>
     {
         return shutterSpeed
+    }
+
+    fun getShutterSpeedChoices() : LiveData<ArrayList<Int>>
+    {
+        return shutterSpeedChoices
     }
 
     fun getBulb() : LiveData<Boolean>
@@ -75,6 +82,18 @@ class SocketViewModel() : ViewModel() {
         }
     }
 
+    fun send(pkt: Any)
+    {
+        val gson = Gson()
+        try {
+            val s = gson.toJson(pkt)
+            send(s)
+        }catch (je : JsonIOException)
+        {
+            Log.e("SocketViewModel", "Send error: cannot convert class to gson")
+        }
+    }
+
     private fun handlePacket(packet: String)
     {
         var json : JSONObject?
@@ -103,10 +122,14 @@ class SocketViewModel() : ViewModel() {
                 shutterSpeed.value = e.shutterSpeed
                 bulb.value = e.bulb
             }
+            is EventConfigChoicesShutterSpeed -> {
+                shutterSpeedChoices.value = e.shutterSpeedChoices
+            }
         }
     }
 
     private var shutterSpeed = MutableLiveData<Int>(0)
+    private var shutterSpeedChoices = MutableLiveData<ArrayList<Int>>(arrayListOf<Int>())
     private var bulb = MutableLiveData<Boolean>(false)
     private var connected = MutableLiveData<Boolean>(false)
 

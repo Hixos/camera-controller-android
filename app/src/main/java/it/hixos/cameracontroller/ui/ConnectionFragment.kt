@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
+import it.hixos.cameracontroller.R
 import it.hixos.cameracontroller.SocketViewModel
 import it.hixos.cameracontroller.databinding.FragmentConnectionBinding
 import kotlinx.coroutines.Dispatchers
@@ -47,38 +48,46 @@ public class ConnectionFragment : Fragment() {
     ): View {
 
         _binding = FragmentConnectionBinding.inflate(inflater, container, false)
+        val sharedPrefs = activity?.getPreferences(Context.MODE_PRIVATE)!!
         val root: View = binding.root
 
-        val buttonConnect = _binding?.buttonManualConnect
-        val editTextAddress = _binding?.editTextServerAddress
-        val progressBar = _binding?.progressBarConnection
+        val buttonConnect = binding.buttonManualConnect
+        val editTextAddress = binding.editTextServerAddress
+        val progressBar = binding.progressBarConnection
 
-        buttonConnect?.setOnClickListener (View.OnClickListener { view ->
-            val action = ConnectionFragmentDirections.actionConnectionFragmentToConnectedFragment()
-            view?.findNavController()?.navigate(action)
-            return@OnClickListener
-            if (editTextAddress != null) {
-                val s = editTextAddress.text.split(":")
+        editTextAddress.setText(sharedPrefs.getString(getString(R.string.key_server_address), ""))
 
-                if(s.size != 2)
-                {
-                    Log.e("ConnectionFragment", "Cannot parse address ${editTextAddress.text}")
-                    return@OnClickListener
-                }
+        buttonConnect.setOnClickListener (View.OnClickListener { view ->
+//            val action = ConnectionFragmentDirections.actionConnectionFragmentToConnectedFragment()
+//            view?.findNavController()?.navigate(action)
+//            return@OnClickListener
 
-                val ip = s[0]
-                var port : Int = -1
-                try {
-                    port = s[1].toInt()
-                }catch (ne: NumberFormatException)
-                {
-                    Log.e("ConnectionFragment", "Cannot parse address ${editTextAddress.text}")
-                    return@OnClickListener
-                }
-
-                socketViewModel.connect(ip, port)
-                progressBar?.visibility = View.VISIBLE
+            with (sharedPrefs.edit()) {
+                putString(getString(R.string.key_server_address), editTextAddress.text.toString())
+                apply()
             }
+
+            val s = editTextAddress.text.split(":")
+
+            if(s.size != 2)
+            {
+                Log.e("ConnectionFragment", "Cannot parse address ${editTextAddress.text}")
+                return@OnClickListener
+            }
+
+            val ip = s[0]
+            var port : Int = -1
+            try {
+                port = s[1].toInt()
+            }catch (ne: NumberFormatException)
+            {
+                Log.e("ConnectionFragment", "Cannot parse address ${editTextAddress.text}")
+                return@OnClickListener
+            }
+
+            socketViewModel.connect(ip, port)
+            progressBar?.visibility = View.VISIBLE
+
         })
 
         socketViewModel.getConnected().observe(viewLifecycleOwner) {connected ->
