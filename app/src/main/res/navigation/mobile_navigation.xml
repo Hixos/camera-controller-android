@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/connectionFragment">
+    <fragment
+        android:id="@+id/connectionFragment"
+        android:name="it.hixos.cameracontroller.ui.ConnectionFragment"
+        android:label="fragment_connection"
+        tools:layout="@layout/fragment_connection" >
+        <action
+            android:id="@+id/action_connectionFragment_to_connectedFragment"
+            app:destination="@id/connectedFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+    </fragment>
+    <fragment
+        android:id="@+id/connectedFragment"
+        android:name="it.hixos.cameracontroller.ui.ConnectedFragment"
+        android:label="fragment_connected"
+        tools:layout="@layout/fragment_connected" >
+        <action
+            android:id="@+id/action_connectedFragment_to_connectionFragment"
+            app:destination="@id/connectionFragment" />
+    </fragment>
+</navigation>
