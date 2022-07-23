@@ -21,7 +21,7 @@ public class Croller extends View {
     private float midx, midy;
     private Paint textPaint, circlePaint, circlePaint2, linePaint;
     private float currdeg = 0, deg = 3, downdeg = 0;
-
+    private float last_deg = deg;
     private boolean isContinuous = false;
 
     private int backCircleColor = Color.parseColor("#222222");
@@ -72,14 +72,23 @@ public class Croller extends View {
     RectF oval;
 
     private onProgressChangedListener mProgressChangeListener;
+    private onProgressSetListener mProgressSetListener;
     private OnCrollerChangeListener mCrollerChangeListener;
 
     public interface onProgressChangedListener {
         void onProgressChanged(int progress);
     }
 
+    public interface onProgressSetListener {
+        void onProgressSet(int progress);
+    }
+
     public void setOnProgressChangedListener(onProgressChangedListener mProgressChangeListener) {
         this.mProgressChangeListener = mProgressChangeListener;
+    }
+
+    public void setOnProgressSetListener(onProgressSetListener mProgressSetListener) {
+        this.mProgressSetListener = mProgressSetListener;
     }
 
     public void setOnCrollerChangeListener(OnCrollerChangeListener mCrollerChangeListener) {
@@ -269,11 +278,13 @@ public class Croller extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (mProgressChangeListener != null)
-            mProgressChangeListener.onProgressChanged((int) (deg - 2));
-
-        if (mCrollerChangeListener != null)
-            mCrollerChangeListener.onProgressChanged(this, (int) (deg - 2));
+        if (last_deg != deg) {
+            last_deg = deg;
+            if(mProgressChangeListener != null)
+                mProgressChangeListener.onProgressChanged((int) (deg - 2));
+            if (mCrollerChangeListener != null)
+                mCrollerChangeListener.onProgressChanged(this, (int) (deg - 2));
+        }
 
         if (isEnabled) {
             circlePaint2.setColor(progressPrimaryColor);
@@ -437,8 +448,11 @@ public class Croller extends View {
             return false;
 
         if (Utils.getDistance(e.getX(), e.getY(), midx, midy) > Math.max(mainCircleRadius, Math.max(backCircleRadius, progressRadius))) {
-            if (startEventSent && mCrollerChangeListener != null) {
-                mCrollerChangeListener.onStopTrackingTouch(this);
+            if (startEventSent) {
+                if(mCrollerChangeListener != null)
+                    mCrollerChangeListener.onStopTrackingTouch(this, (int)(deg-2));
+                if(mProgressSetListener != null)
+                    mProgressSetListener.onProgressSet((int)(deg-2));
                 startEventSent = false;
             }
             if(e.getAction() == MotionEvent.ACTION_DOWN)
@@ -457,7 +471,7 @@ public class Croller extends View {
             downdeg = (float) Math.floor((downdeg / 360) * (max + 5));
 
             if (mCrollerChangeListener != null) {
-                mCrollerChangeListener.onStartTrackingTouch(this);
+                mCrollerChangeListener.onStartTrackingTouch(this, (int)(deg-2));
                 startEventSent = true;
             }
 
@@ -519,7 +533,11 @@ public class Croller extends View {
         }
         if (e.getAction() == MotionEvent.ACTION_UP) {
             if (mCrollerChangeListener != null) {
-                mCrollerChangeListener.onStopTrackingTouch(this);
+                mCrollerChangeListener.onStopTrackingTouch(this, (int)(deg-2));
+                startEventSent = false;
+            }
+            if(mProgressSetListener != null) {
+                mProgressSetListener.onProgressSet((int) (deg - 2));
                 startEventSent = false;
             }
             return true;
