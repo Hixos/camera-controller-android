@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppCrollerStyle" parent="@style/AppCrollerStyleBase">
+        <item name="back_circle_color">@color/croller_circle_color</item>
+        <item name="back_circle_disable_color">@color/md_theme_dark_secondary_disabled</item>
+
+        <item name="main_circle_color">@color/md_theme_dark_background</item>
+        <item name="main_circle_disable_color">@color/md_theme_dark_background</item>
+
+        <item name="indicator_color">@color/md_theme_dark_primary</item>
+        <item name="indicator_disable_color">@color/md_theme_dark_primary_disabled</item>
+
+        <item name="progress_primary_color">@color/md_theme_dark_primary</item>
+        <item name="progress_primary_disable_color">@color/md_theme_dark_primary_disabled</item>
+
+        <item name="progress_secondary_color">@color/md_theme_dark_onPrimary</item>
+        <item name="progress_secondary_disable_color">@color/md_theme_dark_onPrimary_disabled</item>
+
+        <item name="label_color">@color/md_theme_dark_onBackground</item>
+        <item name="label_disabled_color">@color/md_theme_dark_onBackground_disabled</item>
+    </style>
+</resources>

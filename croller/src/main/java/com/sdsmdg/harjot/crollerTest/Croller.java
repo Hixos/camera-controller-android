@@ -101,14 +101,12 @@ public class Croller extends View {
     }
 
     public Croller(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        initXMLAttrs(context, attrs);
-        init();
+        this(context, attrs, R.attr.customCrollerStyle);
     }
 
     public Croller(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initXMLAttrs(context, attrs);
+        initXMLAttrs(context, attrs, defStyleAttr);
         init();
     }
 
@@ -178,8 +176,8 @@ public class Croller extends View {
 
     }
 
-    private void initXMLAttrs(Context context, AttributeSet attrs) {
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.Croller);
+    private void initXMLAttrs(Context context, AttributeSet attrs, int defStyle) {
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.Croller, defStyle, 0);
 
         setEnabled(a.getBoolean(R.styleable.Croller_enabled, true));
         setProgress(a.getInt(R.styleable.Croller_start_progress, 1));

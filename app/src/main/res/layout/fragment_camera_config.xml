@@ -56,10 +56,8 @@
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:max="10"
-        app:min="1"
-        app:progress_primary_circle_size="7"
-        app:progress_secondary_circle_size="5" />
+        app:max="60"
+        app:min="1" />
 
     <com.sdsmdg.harjot.crollerTest.Croller
         android:id="@+id/crollerAperture"
@@ -67,16 +65,15 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
+        app:enabled="true"
         app:is_continuous="false"
         app:label="f \?"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/crollerShutterSpeed"
         app:layout_constraintTop_toTopOf="parent"
-        app:max="10"
-        app:min="1"
-        app:progress_primary_circle_size="7"
-        app:progress_secondary_circle_size="5" />
+        app:max="30"
+        app:min="1" />
 
     <com.sdsmdg.harjot.crollerTest.Croller
         android:id="@+id/crollerISO"
@@ -89,9 +86,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/crollerAperture"
         app:max="10"
-        app:min="1"
-        app:progress_primary_circle_size="7"
-        app:progress_secondary_circle_size="5" />
+        app:min="1" />
 
     <TextView
         android:id="@+id/textViewFocalLength"

@@ -2,9 +2,11 @@ package it.hixos.cameracontroller.ui
 
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -84,7 +86,6 @@ class CameraConfigFragment : Fragment() {
 
         socketViewModel.getISO().observe(viewLifecycleOwner) { iso ->
             val choices = socketViewModel.getISOChoices().value!!
-
             updateCroller(crollerISO, iso, choices, ::isoToString)
         }
 
@@ -99,6 +100,7 @@ class CameraConfigFragment : Fragment() {
 
         socketViewModel.getExpProgram().observe(viewLifecycleOwner) { exp_program ->
             binding.textViewCameraMode.setText(exp_program)
+            updateEnableStatus(disabling_views)
         }
 
         socketViewModel.getFocalLength().observe(viewLifecycleOwner) { focal_length ->
@@ -121,13 +123,8 @@ class CameraConfigFragment : Fragment() {
             binding.switchLongExpNR.isChecked = long_exp_nr
         }
 
-        socketViewModel.getCameraConnected().observe(viewLifecycleOwner) { connected ->
-            if(connected)
-            {
-                disabling_views.forEach { view -> view.isEnabled = true }
-            }else{
-                disabling_views.forEach { view -> view.isEnabled = false }
-            }
+        socketViewModel.getCameraConnected().observe(viewLifecycleOwner) {
+            updateEnableStatus(disabling_views)
         }
 
         socketViewModel.getCCState().observe(viewLifecycleOwner) { state ->
@@ -146,6 +143,7 @@ class CameraConfigFragment : Fragment() {
             val choices = augmentShutterSpeedChoices(socketViewModel.getShutterSpeedChoices().value!!)
             val ss = choices.getOrElse(progress) {_ -> 0}
             if(ss != 0) {
+                crollerShutterSpeed.backCircleColor = ContextCompat.getColor(requireContext(), R.color.croller_circle_changed_color)
                 var ess = EventConfigSetShutterSpeed()
                 ess.shutterSpeed = ss
                 socketViewModel.send(ess)
@@ -164,6 +162,7 @@ class CameraConfigFragment : Fragment() {
             val choices = socketViewModel.getApertureChoices().value!!
             val ap = choices.getOrElse(progress) {_ -> 0}
             if(ap != 0) {
+                crollerAperture.backCircleColor = ContextCompat.getColor(requireContext(), R.color.croller_circle_changed_color)
                 var e = EventConfigSetAperture()
                 e.aperture = ap
                 socketViewModel.send(e)
@@ -184,6 +183,7 @@ class CameraConfigFragment : Fragment() {
             val choices = socketViewModel.getISOChoices().value!!
             val iso = choices.getOrElse(progress) {_ -> 0}
             if(iso != 0) {
+                crollerISO.backCircleColor = ContextCompat.getColor(requireContext(), R.color.croller_circle_changed_color)
                 var e = EventConfigSetISO()
                 e.iso = iso
                 socketViewModel.send(e)
@@ -228,7 +228,7 @@ class CameraConfigFragment : Fragment() {
     {
         var out = ArrayList<Int>()
         out.addAll(choices)
-        out.addAll(listOf(45000000, 60000000, 75000000, 90000000, 105000000, 120000000, 150000000, 180000000))
+        out.addAll(listOf(45, 60, 75, 90, 120, 150, 180, 240, 300, 360, 480, 600).map { it * 1000000 })
         return out
     }
 
@@ -242,6 +242,7 @@ class CameraConfigFragment : Fragment() {
         {
             croller.progress = i
             croller.label = valToString(value)
+            croller.backCircleColor = ContextCompat.getColor(requireContext(), R.color.croller_circle_color)
         }else{
             Log.e("CameraConfigFragment", "Could not find element $value in croller list")
         }
@@ -270,8 +271,36 @@ class CameraConfigFragment : Fragment() {
         return "f ".plus(nf.format(v))
     }
 
-    fun isoToString(iso: Int) : String
-    {
+    fun isoToString(iso: Int) : String {
         return "ISO ".plus(iso.toString())
+    }
+
+    fun updateEnableStatus(disabling_views: List<View>)
+    {
+        val connected = socketViewModel.getCameraConnected().value!!
+        disabling_views.forEach { view -> view.isEnabled = connected }
+
+        val exp_program = socketViewModel.getExpProgram().value!!
+        if(connected)
+        {
+            when(exp_program)
+            {
+                "A" -> {
+                    binding.crollerShutterSpeed.isEnabled = false
+                }
+                "S" -> {
+                    binding.crollerAperture.isEnabled = false
+                }
+                "P" -> {
+                    binding.crollerAperture.isEnabled = false
+                    binding.crollerShutterSpeed.isEnabled = false
+                }
+                "Auto" -> {
+                    binding.crollerAperture.isEnabled = false
+                    binding.crollerShutterSpeed.isEnabled = false
+                    binding.switchAutoISO.isEnabled = false
+                }
+            }
+        }
     }
 }

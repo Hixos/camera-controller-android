@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppCrollerStyleBase">
+        <item name="progress_primary_circle_size">7</item>
+        <item name="progress_secondary_circle_size">5</item>
+        <item name="progress_primary_stroke_width">12</item>
+        <item name="progress_secondary_stroke_width">5</item>
+
+        <item name="label_size">@dimen/croller_label_size</item>
+    </style>
+
+    <style name="AppCrollerStyle" parent="@style/AppCrollerStyleBase">
+        <item name="back_circle_color">@color/croller_circle_color</item>
+        <item name="back_circle_disable_color">@color/md_theme_light_secondary_disabled</item>
+
+        <item name="main_circle_color">@color/md_theme_light_background</item>
+        <item name="main_circle_disable_color">@color/md_theme_light_background</item>
+
+        <item name="indicator_color">@color/md_theme_light_primary</item>
+        <item name="indicator_disable_color">@color/md_theme_light_primary_disabled</item>
+
+        <item name="progress_primary_color">@color/md_theme_light_primary</item>
+        <item name="progress_primary_disable_color">@color/md_theme_light_primary_disabled</item>
+
+        <item name="progress_secondary_color">@color/md_theme_light_onPrimary</item>
+        <item name="progress_secondary_disable_color">@color/md_theme_light_onPrimary_disabled</item>
+
+        <item name="label_color">@color/md_theme_light_onBackground</item>
+        <item name="label_disabled_color">@color/md_theme_light_onBackground_disabled</item>
+    </style>
+</resources>
