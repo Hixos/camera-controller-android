@@ -7,14 +7,53 @@
     android:layout_height="match_parent"
     tools:context=".ui.CameraConfigFragment">
 
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchAutoISO"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ISO Auto"
+        app:layout_constraintBottom_toBottomOf="@+id/switchLongExpNR"
+        app:layout_constraintEnd_toStartOf="@+id/switchDownload"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/switchLongExpNR" />
+
+    <TextView
+        android:id="@+id/textViewCameraMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="M"
+        app:layout_constraintBottom_toTopOf="@+id/textViewLastCapture"
+        app:layout_constraintStart_toStartOf="@+id/textViewLastCapture"
+        app:layout_constraintTop_toBottomOf="@+id/textViewLightMeter" />
+
+    <TextView
+        android:id="@+id/textViewLightMeter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="+ 0"
+        app:layout_constraintBottom_toTopOf="@+id/textViewCameraMode"
+        app:layout_constraintStart_toStartOf="@+id/textViewCameraMode"
+        app:layout_constraintTop_toBottomOf="@+id/crollerShutterSpeed" />
+
+    <TextView
+        android:id="@+id/textViewBattery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="\?\?\?%"
+        app:layout_constraintBottom_toTopOf="@+id/switchAutoISO"
+        app:layout_constraintEnd_toEndOf="@+id/textViewFocusMode"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFocusMode" />
+
     <com.sdsmdg.harjot.crollerTest.Croller
         android:id="@+id/crollerShutterSpeed"
-        android:layout_width="100dp"
+        android:layout_width="160dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
         app:is_continuous="false"
-        app:label="50 s"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
+        app:label="\?\? s"
+        app:layout_constraintEnd_toStartOf="@+id/crollerAperture"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:max="10"
@@ -22,31 +61,96 @@
         app:progress_primary_circle_size="7"
         app:progress_secondary_circle_size="5" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintGuide_percent="0.3333"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintGuide_percent="0.66666"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
+    <com.sdsmdg.harjot.crollerTest.Croller
+        android:id="@+id/crollerAperture"
+        android:layout_width="160dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Button"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
+        android:layout_marginEnd="24dp"
+        app:is_continuous="false"
+        app:label="f \?"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/crollerShutterSpeed"
+        app:layout_constraintTop_toTopOf="parent"
+        app:max="10"
+        app:min="1"
+        app:progress_primary_circle_size="7"
+        app:progress_secondary_circle_size="5" />
+
+    <com.sdsmdg.harjot.crollerTest.Croller
+        android:id="@+id/crollerISO"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-24dp"
+        app:is_continuous="false"
+        app:label="ISO \?\?\?"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/crollerShutterSpeed" />
+        app:layout_constraintTop_toBottomOf="@+id/crollerAperture"
+        app:max="10"
+        app:min="1"
+        app:progress_primary_circle_size="7"
+        app:progress_secondary_circle_size="5" />
+
+    <TextView
+        android:id="@+id/textViewFocalLength"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:text="\?\? mm"
+        app:layout_constraintBottom_toTopOf="@+id/textViewFocusMode"
+        app:layout_constraintEnd_toEndOf="@+id/switchDownload"
+        app:layout_constraintTop_toBottomOf="@+id/crollerAperture" />
+
+    <TextView
+        android:id="@+id/textViewFocusMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="MF"
+        app:layout_constraintBottom_toTopOf="@+id/textViewBattery"
+        app:layout_constraintEnd_toEndOf="@+id/textViewFocalLength"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFocalLength" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchLongExpNR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:text="NR"
+        app:layout_constraintEnd_toStartOf="@+id/switchAutoISO"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/crollerISO" />
+
+    <TextView
+        android:id="@+id/textViewState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:text="Disconnected"
+        app:layout_constraintEnd_toStartOf="@+id/crollerAperture"
+        app:layout_constraintStart_toEndOf="@+id/crollerShutterSpeed"
+        app:layout_constraintTop_toTopOf="@+id/crollerAperture" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchDownload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:text="Download"
+        app:layout_constraintBottom_toBottomOf="@+id/switchAutoISO"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/switchAutoISO" />
+
+    <TextView
+        android:id="@+id/textViewLastCapture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/switchLongExpNR"
+        app:layout_constraintStart_toStartOf="@+id/switchLongExpNR"
+        app:layout_constraintTop_toBottomOf="@+id/textViewCameraMode" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

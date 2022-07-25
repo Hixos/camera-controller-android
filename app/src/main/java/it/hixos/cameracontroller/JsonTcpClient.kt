@@ -7,6 +7,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.InputStream
@@ -22,6 +24,8 @@ class JsonTcpClient {
             Log.e("JsonTCPClient", "Already connected!")
             return@withContext false
         }
+        socket.close()
+        socket = Socket()
         try{
             Log.d("JsonTCPClient", "Connecting... $ip:$port")
             socket.connect(InetSocketAddress(ip, port), timeout)
@@ -44,6 +48,8 @@ class JsonTcpClient {
     {
         connected = false
         socket.close()
+
+        socket = Socket()
         Log.i("JsonTCPClient", "Disconnected")
     }
 
@@ -54,27 +60,38 @@ class JsonTcpClient {
         while(true)
         {
             val buf = ByteArray(4)
-            sockReadBytes(buf, istream, 4)
-            val packet_len = java.nio.ByteBuffer.wrap(buf).getInt()
-            Log.d("JsonTCPClient", "Header ok. len = ${packet_len}")
+            if(!sockReadBytes(buf, istream, 4))
+            {
+                disconnect()
+                Log.e("JsonTCPClient", "Error reading packet header")
+                return@flow
+            }
+            val packetLen = java.nio.ByteBuffer.wrap(buf).getInt()
+            Log.d("JsonTCPClient", "Header ok. len = ${packetLen}")
 
-            val pkt = ByteArray(packet_len)
-            sockReadBytes(pkt, istream, packet_len)
+            val pkt = ByteArray(packetLen)
+            if(!sockReadBytes(pkt, istream, packetLen))
+            {
+                disconnect()
+                Log.e("JsonTCPClient", "Error reading packet")
+                return@flow
+            }
             Log.d("JsonTCPClient", "Packet ok: val = ${String(pkt)}")
             emit(String(pkt))
         }
     }.flowOn(Dispatchers.IO)
 
-    suspend fun send(data: String) = withContext(Dispatchers.IO)
+    suspend fun send(data: String, delayms: Long = 0) = withContext(Dispatchers.IO)
     {
+        delay(delayms)
         val ostream = socket.getOutputStream()
-
         var buf_len = java.nio.ByteBuffer.allocate(4).putInt(data.length).array()
         var buf_data = data.toByteArray()
-
-        ostream.write(buf_len)
-        ostream.write(buf_data)
-        ostream.flush()
+        mutex.withLock {
+            ostream.write(buf_len)
+            ostream.write(buf_data)
+            ostream.flush()
+        }
     }
 
     private fun sockReadBytes(buf: ByteArray, istream: InputStream, len: Int) : Boolean
@@ -94,4 +111,6 @@ class JsonTcpClient {
 
     private var socket: Socket = Socket()
     private var connected = false
+
+    private val mutex = Mutex()
 }

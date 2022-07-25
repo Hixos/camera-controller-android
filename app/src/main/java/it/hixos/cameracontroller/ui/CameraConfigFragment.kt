@@ -7,10 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sdsmdg.harjot.crollerTest.Croller
 import it.hixos.cameracontroller.*
 import it.hixos.cameracontroller.databinding.FragmentCameraConfigBinding
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.NumberFormat
 
@@ -32,15 +35,30 @@ class CameraConfigFragment : Fragment() {
         _binding = FragmentCameraConfigBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val button = binding.button
         val crollerShutterSpeed = binding.crollerShutterSpeed
+        val crollerAperture = binding.crollerAperture
+        val crollerISO = binding.crollerISO
+        val switchDownload = binding.switchDownload
 
-        button.setOnClickListener(View.OnClickListener { view ->
-            var ess = EventConfigGetChoicesShutterSpeed()
-            val gson = Gson()
+        val disabling_views = listOf<View>(binding.crollerShutterSpeed, binding.crollerAperture,
+            binding.crollerISO, binding.switchAutoISO, binding.switchLongExpNR, binding.textViewLightMeter,
+            binding.textViewCameraMode, binding.textViewFocalLength, binding.textViewFocusMode, binding.textViewBattery)
 
-            socketViewModel.send(gson.toJson(ess))
-        })
+        socketViewModel.getDownloadEnabled().observe(viewLifecycleOwner) {download ->
+            switchDownload.isChecked = download
+        }
+
+        switchDownload.setOnCheckedChangeListener { button, checked ->
+            if(button.isPressed())
+            {
+                var e = EventCameraCmdDownload()
+                e.download = checked
+                socketViewModel.send(e)
+            }
+        }
+        socketViewModel.getCapturedFile().observe(viewLifecycleOwner) { file ->
+            binding.textViewLastCapture.setText(file)
+        }
 
         socketViewModel.getShutterSpeed().observe(viewLifecycleOwner) { ss ->
              val choices = socketViewModel.getShutterSpeedChoices().value!!
@@ -53,29 +71,156 @@ class CameraConfigFragment : Fragment() {
             updateCroller(crollerShutterSpeed, ss, augmentShutterSpeedChoices(choices), ::shutterSpeedToString)
         }
 
+        socketViewModel.getAperture().observe(viewLifecycleOwner) { ap ->
+            val choices = socketViewModel.getApertureChoices().value!!
+
+            updateCroller(crollerAperture, ap, choices, ::apertureToString)
+        }
+
+        socketViewModel.getApertureChoices().observe(viewLifecycleOwner) { choices ->
+            val ap = socketViewModel.getAperture().value!!
+            updateCroller(crollerAperture, ap, choices, ::apertureToString)
+        }
+
+        socketViewModel.getISO().observe(viewLifecycleOwner) { iso ->
+            val choices = socketViewModel.getISOChoices().value!!
+
+            updateCroller(crollerISO, iso, choices, ::isoToString)
+        }
+
+        socketViewModel.getISOChoices().observe(viewLifecycleOwner) { choices ->
+            val iso = socketViewModel.getISO().value!!
+            updateCroller(crollerISO, iso, choices, ::isoToString)
+        }
+
+        socketViewModel.getLightMeter().observe(viewLifecycleOwner) { lightmeter ->
+            binding.textViewLightMeter.setText("%+.1f".format(lightmeter))
+        }
+
+        socketViewModel.getExpProgram().observe(viewLifecycleOwner) { exp_program ->
+            binding.textViewCameraMode.setText(exp_program)
+        }
+
+        socketViewModel.getFocalLength().observe(viewLifecycleOwner) { focal_length ->
+            binding.textViewFocalLength.setText(focal_length.toString().plus(" mm"))
+        }
+
+        socketViewModel.getBattery().observe(viewLifecycleOwner) { battery ->
+            binding.textViewBattery.setText(battery.toString().plus("%"))
+        }
+
+        socketViewModel.getFocusMode().observe(viewLifecycleOwner) { focus_mode ->
+            binding.textViewFocusMode.setText(focus_mode)
+        }
+
+        socketViewModel.getAutoIso().observe(viewLifecycleOwner) { auto_iso ->
+            binding.switchAutoISO.isChecked = auto_iso
+        }
+
+        socketViewModel.getLongExpNR().observe(viewLifecycleOwner) { long_exp_nr ->
+            binding.switchLongExpNR.isChecked = long_exp_nr
+        }
+
+        socketViewModel.getCameraConnected().observe(viewLifecycleOwner) { connected ->
+            if(connected)
+            {
+                disabling_views.forEach { view -> view.isEnabled = true }
+            }else{
+                disabling_views.forEach { view -> view.isEnabled = false }
+            }
+        }
+
+        socketViewModel.getCCState().observe(viewLifecycleOwner) { state ->
+            binding.textViewState.setText(state)
+        }
+
+//        socketViewModel.setN
+
         crollerShutterSpeed.setOnProgressChangedListener { progress ->
             val choices = augmentShutterSpeedChoices(socketViewModel.getShutterSpeedChoices().value!!)
             val ss = choices.getOrElse(progress) {_ -> 0}
             crollerShutterSpeed.label = shutterSpeedToString(ss)
-
-            var ess = EventConfigSetShutterSpeed()
-            ess.shutterSpeed = ss
         }
 
         crollerShutterSpeed.setOnProgressSetListener { progress ->
             val choices = augmentShutterSpeedChoices(socketViewModel.getShutterSpeedChoices().value!!)
             val ss = choices.getOrElse(progress) {_ -> 0}
-            Log.d("CameraConfigFragment", "On Progress Set $ss")
-            var ess = EventConfigSetShutterSpeed()
             if(ss != 0) {
+                var ess = EventConfigSetShutterSpeed()
                 ess.shutterSpeed = ss
                 socketViewModel.send(ess)
+                var e3 = EventConfigGetLightMeter()
+                socketViewModel.send(e3, resources.getInteger(R.integer.lightmeter_cmd_delay).toLong())
             }
         }
 
-        // Request data
-        val ecomm = EventConfigGetCommon()
-        socketViewModel.send(ecomm)
+        crollerAperture.setOnProgressChangedListener { progress ->
+            val choices = socketViewModel.getApertureChoices().value!!
+            val ap = choices.getOrElse(progress) {_ -> 0}
+            crollerAperture.label = apertureToString(ap)
+        }
+
+        crollerAperture.setOnProgressSetListener { progress ->
+            val choices = socketViewModel.getApertureChoices().value!!
+            val ap = choices.getOrElse(progress) {_ -> 0}
+            if(ap != 0) {
+                var e = EventConfigSetAperture()
+                e.aperture = ap
+                socketViewModel.send(e)
+                var e2 = EventConfigGetChoicesAperture()
+                socketViewModel.send(e2)
+                var e3 = EventConfigGetLightMeter()
+                socketViewModel.send(e3, resources.getInteger(R.integer.lightmeter_cmd_delay).toLong())
+            }
+        }
+
+        crollerISO.setOnProgressChangedListener { progress ->
+            val choices = socketViewModel.getISOChoices().value!!
+            val iso = choices.getOrElse(progress) {_ -> 0}
+            crollerISO.label = isoToString(iso)
+        }
+
+        crollerISO.setOnProgressSetListener { progress ->
+            val choices = socketViewModel.getISOChoices().value!!
+            val iso = choices.getOrElse(progress) {_ -> 0}
+            if(iso != 0) {
+                var e = EventConfigSetISO()
+                e.iso = iso
+                socketViewModel.send(e)
+                var e3 = EventConfigGetLightMeter()
+                socketViewModel.send(e3, resources.getInteger(R.integer.lightmeter_cmd_delay).toLong())
+            }
+        }
+
+        binding.textViewFocalLength.setOnClickListener{
+            socketViewModel.send(EventConfigGetFocalLength())
+            socketViewModel.send(EventConfigGetAperture())
+            socketViewModel.send(EventConfigGetChoicesAperture())
+            socketViewModel.send(EventConfigGetLightMeter(), resources.getInteger(R.integer.lightmeter_cmd_delay).toLong())
+        }
+
+        binding.textViewState.setOnClickListener{
+            socketViewModel.send(EventConfigGetAll())
+        }
+
+
+        binding.switchAutoISO.setOnCheckedChangeListener { view, checked ->
+            if(view.isPressed) {
+                var e = EventConfigSetAutoISO()
+                e.autoIso = checked
+                socketViewModel.send(e)
+            }
+        }
+
+        binding.switchLongExpNR.setOnCheckedChangeListener { view, checked ->
+            if(view.isPressed) {
+                var e = EventConfigSetLongExpNR()
+                e.longExpNr = checked
+                socketViewModel.send(e)
+            }
+        }
+// Request data
+        socketViewModel.send(EventConfigGetAll())
         return root
     }
 
@@ -115,5 +260,18 @@ class CameraConfigFragment : Fragment() {
         }else{
             return nf.format(sec).plus(" s")
         }
+    }
+
+    fun apertureToString(ap: Int) : String
+    {
+        val v = ap.toFloat() / 100
+        val nf: NumberFormat = DecimalFormat("##.#")
+
+        return "f ".plus(nf.format(v))
+    }
+
+    fun isoToString(iso: Int) : String
+    {
+        return "ISO ".plus(iso.toString())
     }
 }

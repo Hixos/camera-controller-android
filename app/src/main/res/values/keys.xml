@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="key_server_address">PREF_SERVER_ADDRESS</string>
+    <string name="key_intervalometer_interval">PREF_INTERVALOMETER_INTERVAL</string>
+    <string name="key_intervalometer_total_captures">PREF_INTERVALOMETER_TOTAL_CAPTURES</string>
+</resources>

@@ -1,10 +1,21 @@
 <resources>
     <string name="app_name">CameraController</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
     <string name="button_connect">Connect</string>
     <string name="server_ip_address">Server IP Address</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="key_server_address">PREF_SERVER_ADDRESS</string>
+    <string name="connection_error">Connection error</string>
+    <string name="mode_manual_mode">Manual Control</string>
+    <string name="mode_intervalometer">Intervalometer</string>
+    <string name="title_log">Log</string>
+    <string name="download">Download</string>
+    <string name="capture">Capture</string>
+    <string name="capturing">Capturing</string>
+    <string name="downloading">Downloading</string>
+    <string name="error">Error</string>
+    <string name="camera_missing">Camera Missing</string>
+    <string name="done">Done!</string>
+    <string name="last_capture">Last download:</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="stopping">Stopping</string>
+    <string name="current_mode">Current Mode:</string>
 </resources>

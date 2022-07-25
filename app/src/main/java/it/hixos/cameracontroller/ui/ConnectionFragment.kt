@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
@@ -86,7 +87,7 @@ public class ConnectionFragment : Fragment() {
             }
 
             socketViewModel.connect(ip, port)
-            progressBar?.visibility = View.VISIBLE
+            progressBar.visibility = View.VISIBLE
 
         })
 
@@ -96,9 +97,11 @@ public class ConnectionFragment : Fragment() {
                 socketViewModel.startReceiver()
                 val action = ConnectionFragmentDirections.actionConnectionFragmentToConnectedFragment()
                 view?.findNavController()?.navigate(action)
+            }else{
+                progressBar.visibility = View.INVISIBLE
+                Toast.makeText(context, R.string.connection_error, Toast.LENGTH_LONG).show()
             }
         }
-
 
         return root
     }

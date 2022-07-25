@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mode_navigation"
+    app:startDestination="@id/navigation_manual_ctrl">
+
+    <fragment
+        android:id="@+id/navigation_manual_ctrl"
+        android:name="it.hixos.cameracontroller.ui.ManualControlFragment"
+        android:label="fragment_manual_control"
+        tools:layout="@layout/fragment_manual_control" />
+    <fragment
+        android:id="@+id/navigation_intervalometer"
+        android:name="it.hixos.cameracontroller.ui.IntervalometerFragment"
+        android:label="fragment_intervalometer"
+        tools:layout="@layout/fragment_intervalometer" />
+    <fragment
+        android:id="@+id/navigation_log"
+        android:name="it.hixos.cameracontroller.ui.LogFragment"
+        android:label="fragment_log"
+        tools:layout="@layout/fragment_log" />
+</navigation>
