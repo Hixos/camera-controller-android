@@ -11,9 +11,9 @@
         android:icon="@drawable/ic_icon_intervalometer"
         android:title="@string/mode_intervalometer" />
 
-    <item
-        android:id="@+id/navigation_log"
-        android:icon="@drawable/ic_icon_log"
-        android:title="@string/title_log" />
+<!--    <item-->
+<!--        android:id="@+id/navigation_log"-->
+<!--        android:icon="@drawable/ic_icon_log"-->
+<!--        android:title="@string/title_log" />-->
 
 </menu>
