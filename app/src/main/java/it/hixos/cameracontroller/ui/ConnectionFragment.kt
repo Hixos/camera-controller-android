@@ -2,6 +2,8 @@ package it.hixos.cameracontroller.ui
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.opengl.Visibility
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
@@ -18,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
+import com.github.razir.progressbutton.*
 import it.hixos.cameracontroller.R
 import it.hixos.cameracontroller.SocketViewModel
 import it.hixos.cameracontroller.databinding.FragmentConnectionBinding
@@ -26,28 +30,27 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.NumberFormatException
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.Inet4Address
-import java.net.SocketException
+import java.net.*
 
 
 public class ConnectionFragment : Fragment() {
-
+    private val TAG = "ConnectionFragment"
+    private val NSD_SERVICE_TYPE = "_workstation._tcp."
+    private val NSD_SERVICE_NAME = "cameracontroller"
     private var _binding: FragmentConnectionBinding? = null
+
+    private var nsdManager: NsdManager? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
     val socketViewModel: SocketViewModel by activityViewModels()
 
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentConnectionBinding.inflate(inflater, container, false)
         val sharedPrefs = activity?.getPreferences(Context.MODE_PRIVATE)!!
         val root: View = binding.root
@@ -56,40 +59,38 @@ public class ConnectionFragment : Fragment() {
         val editTextAddress = binding.editTextServerAddress
         val progressBar = binding.progressBarConnection
 
+        bindProgressButton(buttonConnect)
+        buttonConnect.attachTextChangeAnimator()
+
         editTextAddress.setText(sharedPrefs.getString(getString(R.string.key_server_address), ""))
 
-        buttonConnect.setOnClickListener (View.OnClickListener { view ->
-//            val action = ConnectionFragmentDirections.actionConnectionFragmentToConnectedFragment()
-//            view?.findNavController()?.navigate(action)
-//            return@OnClickListener
+        progressBar.setOnClickListener(View.OnClickListener {
+            stopDiscovery()
+            buttonConnect.visibility = View.VISIBLE
+            editTextAddress.visibility = View.VISIBLE
+            progressBar.visibility = View.GONE
+        })
 
+        buttonConnect.setOnClickListener (View.OnClickListener { view ->
             with (sharedPrefs.edit()) {
                 putString(getString(R.string.key_server_address), editTextAddress.text.toString())
                 apply()
             }
 
-            val s = editTextAddress.text.split(":")
+            val ip = editTextAddress.text.toString()
 
-            if(s.size != 2)
-            {
-                Log.e("ConnectionFragment", "Cannot parse address ${editTextAddress.text}")
-                return@OnClickListener
-            }
+            socketViewModel.connect(ip)
 
-            val ip = s[0]
-            var port : Int = -1
-            try {
-                port = s[1].toInt()
-            }catch (ne: NumberFormatException)
-            {
-                Log.e("ConnectionFragment", "Cannot parse address ${editTextAddress.text}")
-                return@OnClickListener
-            }
-
-            socketViewModel.connect(ip, port)
-            progressBar.visibility = View.VISIBLE
-
+            buttonConnect.showProgress { buttonTextRes = R.string.connecting }
+            buttonConnect.isClickable = false
         })
+
+
+        val buttonErrorDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_button_error_24)
+        buttonErrorDrawable?.setBounds(0, 0, 50, 50)
+        val buttonOkDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_button_ok_24)
+        buttonOkDrawable?.setBounds(0, 0, 50, 50)
+
 
         socketViewModel.getConnected().observe(viewLifecycleOwner) {connected ->
             if(connected)
@@ -97,70 +98,99 @@ public class ConnectionFragment : Fragment() {
                 socketViewModel.startReceiver()
                 val action = ConnectionFragmentDirections.actionConnectionFragmentToConnectedFragment()
                 view?.findNavController()?.navigate(action)
-            }else{
-                progressBar.visibility = View.INVISIBLE
-                Toast.makeText(context, R.string.connection_error, Toast.LENGTH_LONG).show()
+                buttonConnect.showDrawable(buttonOkDrawable!!) { buttonTextRes = R.string.connected }
             }
-        }
-
-        return root
-    }
-
-    fun navigateToConnected()
-    {
-        var nav_ctrl = findNavController()
-        val action = ConnectionFragmentDirections.actionConnectionFragmentToConnectedFragment()
-        nav_ctrl.navigate(action)
-    }
-
-    suspend fun udpecho() = withContext(Dispatchers.IO)
-    {
-        var b = ByteArray(1)
-        b[0] = 0x66
-        var p = DatagramPacket(b, 1)
-        p.address = Inet4Address.getByName("239.154.117.1")
-        p.port = 60050
-        var sock = DatagramSocket()
-
-        sock.send(p)
-        Log.i("UDP", "Packet sent! ${b[0].toString(16)}")
-
-        launch {
-            var b2 = ByteArray(1)
-            var prec = DatagramPacket(b2,1)
-            var ok = false
-            try{
-                sock.receive(prec)
-                ok = true
-            }catch (se : SocketException)
+            else
             {
+                buttonConnect.showDrawable(buttonErrorDrawable!!) { buttonTextRes = R.string.error }
             }
-            if(ok)
-                Log.i("UDP", "Received response from ${prec.address.toString()}! ${b2[0].toString(16)}")
-        }
-        launch {
-            delay(2000)
-            Log.i("UDP", "Closing socket")
-            sock.close()
-        }
-    }
 
-    fun getNetMask()
-    {
-        val cm = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        var lp = cm.getLinkProperties(cm.activeNetwork)
-//        if(lp != null && lp.nat64Prefix != null)
-        var addr0 = lp?.nat64Prefix?.address
-        Log.i("NET", "Addr0: ${addr0.toString()}")
-        Log.i("NET", "Prefix ${lp?.nat64Prefix?.prefixLength}")
+            lifecycleScope.launch(Dispatchers.Main)
+            {
+                delay(
+                    resources.getInteger(R.integer.task_done_display_duration).toLong()
+                )
+                buttonConnect.hideProgress(R.string.connect)
+                buttonConnect.isClickable = true
+            }
+        }
+        nsdManager = requireActivity().application.getSystemService(Context.NSD_SERVICE) as NsdManager
+        nsdManager?.discoverServices(NSD_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+        return root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
     }
     override fun onDestroyView() {
         super.onDestroyView()
+        stopDiscovery()
         _binding = null
+    }
+
+    fun stopDiscovery()
+    {
+        try {
+            nsdManager?.stopServiceDiscovery(discoveryListener)
+        }catch (e: IllegalArgumentException)
+        {
+
+        }
+    }
+
+    private val discoveryListener = object : NsdManager.DiscoveryListener {
+
+        // Called as soon as service discovery begins.
+        override fun onDiscoveryStarted(regType: String) {
+            Log.d(TAG, "Service discovery started ($regType)")
+        }
+
+        override fun onServiceFound(service: NsdServiceInfo) {
+            // A service was found! Do something with it.
+            Log.d(TAG, "Service discovery success: ${service.serviceName}")
+            if(service.serviceName.contains(NSD_SERVICE_NAME))
+            {
+                nsdManager?.resolveService(service, resolveListener)
+            }
+        }
+
+        override fun onServiceLost(service: NsdServiceInfo) {
+            // When the network service is no longer available.
+            // Internal bookkeeping code goes here.
+            Log.e(TAG, "service lost: $service")
+        }
+
+        override fun onDiscoveryStopped(serviceType: String) {
+            Log.i(TAG, "Discovery stopped: $serviceType")
+        }
+
+        override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
+            Log.e(TAG, "Discovery failed: Error code:$errorCode")
+            nsdManager?.stopServiceDiscovery(this)
+        }
+
+        override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
+            Log.e(TAG, "Discovery failed: Error code:$errorCode")
+            nsdManager?.stopServiceDiscovery(this)
+        }
+    }
+
+    private val resolveListener = object : NsdManager.ResolveListener {
+
+        override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+            // Called when the resolve fails. Use the error code to debug.
+            Log.e(TAG, "Resolve failed: $errorCode")
+        }
+
+        override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+            Log.e(TAG, "Resolve Succeeded. $serviceInfo")
+
+            if (serviceInfo.serviceName.startsWith(NSD_SERVICE_NAME)) {
+                socketViewModel.connect(serviceInfo.host.hostAddress!!)
+                return
+            }
+        }
     }
 }
