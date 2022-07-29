@@ -18,7 +18,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:max="@integer/intervalometer_max_interval"
+        app:max="@integer/intervalometer_max_interval_count"
         app:min="0"
         app:progress_primary_circle_size="7"
         app:progress_secondary_circle_size="5" />
@@ -33,7 +33,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/crollerInterval"
-        app:max="@integer/intervalometer_max_captures"
+        app:max="@integer/intervalometer_max_captures_count"
         app:min="1"
         app:progress_primary_circle_size="7"
         app:progress_secondary_circle_size="5" />

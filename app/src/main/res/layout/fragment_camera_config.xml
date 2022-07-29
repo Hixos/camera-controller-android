@@ -22,6 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="M"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
         app:layout_constraintBottom_toTopOf="@+id/textViewLastCapture"
         app:layout_constraintStart_toStartOf="@+id/textViewLastCapture"
         app:layout_constraintTop_toBottomOf="@+id/textViewLightMeter" />
@@ -31,6 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="+ 0"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
         app:layout_constraintBottom_toTopOf="@+id/textViewCameraMode"
         app:layout_constraintStart_toStartOf="@+id/textViewCameraMode"
         app:layout_constraintTop_toBottomOf="@+id/crollerShutterSpeed" />
@@ -40,6 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="\?\?\?%"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
         app:layout_constraintBottom_toTopOf="@+id/switchAutoISO"
         app:layout_constraintEnd_toEndOf="@+id/textViewFocusMode"
         app:layout_constraintTop_toBottomOf="@+id/textViewFocusMode" />
@@ -94,6 +97,7 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:text="\?\? mm"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
         app:layout_constraintBottom_toTopOf="@+id/textViewFocusMode"
         app:layout_constraintEnd_toEndOf="@+id/switchDownload"
         app:layout_constraintTop_toBottomOf="@+id/crollerAperture" />
@@ -103,6 +107,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="MF"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
         app:layout_constraintBottom_toTopOf="@+id/textViewBattery"
         app:layout_constraintEnd_toEndOf="@+id/textViewFocalLength"
         app:layout_constraintTop_toBottomOf="@+id/textViewFocalLength" />
@@ -144,6 +149,7 @@
         android:id="@+id/textViewLastCapture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
         app:layout_constraintBottom_toTopOf="@+id/switchLongExpNR"
         app:layout_constraintStart_toStartOf="@+id/switchLongExpNR"
         app:layout_constraintTop_toBottomOf="@+id/textViewCameraMode" />

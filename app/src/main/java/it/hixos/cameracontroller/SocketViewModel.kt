@@ -1,18 +1,21 @@
 package it.hixos.cameracontroller
 
-import android.util.JsonReader
 import android.util.Log
+import androidx.annotation.MainThread
+import androidx.annotation.Nullable
 import androidx.lifecycle.*
 import com.google.gson.Gson
 import com.google.gson.JsonIOException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class SocketViewModel() : ViewModel() {
+    private val PORT = 60099;
+
     override fun onCleared() {
         Log.d("SocketViewModel", "onCleared")
         disconnect()
@@ -124,7 +127,7 @@ class SocketViewModel() : ViewModel() {
         return bulb
     }
 
-    fun connect(ip: String, port: Int)
+    fun connect(ip: String, port: Int = PORT)
     {
         viewModelScope.launch(Dispatchers.Main)
         {
@@ -262,33 +265,33 @@ class SocketViewModel() : ViewModel() {
         }
     }
 
-    private var shutterSpeed = MutableLiveData<Int>(0)
-    private var shutterSpeedChoices = MutableLiveData<ArrayList<Int>>(arrayListOf<Int>())
+    private var shutterSpeed = OnlyChangeMutableLiveData<Int>(0)
+    private var shutterSpeedChoices = OnlyChangeMutableLiveData<ArrayList<Int>>(arrayListOf<Int>())
 
-    private var aperture = MutableLiveData<Int>(0)
-    private var apertureChoices = MutableLiveData<ArrayList<Int>>(arrayListOf<Int>())
+    private var aperture = OnlyChangeMutableLiveData<Int>(0)
+    private var apertureChoices = OnlyChangeMutableLiveData<ArrayList<Int>>(arrayListOf<Int>())
 
-    private var iso = MutableLiveData<Int>(0)
-    private var isoChoices = MutableLiveData<ArrayList<Int>>(arrayListOf<Int>())
+    private var iso = OnlyChangeMutableLiveData<Int>(0)
+    private var isoChoices = OnlyChangeMutableLiveData<ArrayList<Int>>(arrayListOf<Int>())
 
-    private var lightmeter = MutableLiveData<Float>(0f)
-    private var exp_program = MutableLiveData<String>("M")
-    private var focal_length = MutableLiveData<Int>(0)
-    private var battery = MutableLiveData<Int>(100)
-    private var focus_mode = MutableLiveData<String>("MF")
+    private var lightmeter = OnlyChangeMutableLiveData<Float>(0f)
+    private var exp_program = OnlyChangeMutableLiveData<String>("M")
+    private var focal_length = OnlyChangeMutableLiveData<Int>(0)
+    private var battery = OnlyChangeMutableLiveData<Int>(100)
+    private var focus_mode = OnlyChangeMutableLiveData<String>("MF")
 
-    private var autoIso = MutableLiveData<Boolean>(false)
-    private var longExpNr = MutableLiveData<Boolean>(false)
+    private var autoIso = OnlyChangeMutableLiveData<Boolean>(false)
+    private var longExpNr = OnlyChangeMutableLiveData<Boolean>(false)
 
 
-    private var bulb = MutableLiveData<Boolean>(false)
-    private var connected = MutableLiveData<Boolean>(false)
-    private var camera_connected = MutableLiveData<Boolean>(false)
-    private var cc_state = MutableLiveData<String>("Disconnected")
-    private var download_enabled = MutableLiveData<Boolean>(false)
-    private var capture_file = MutableLiveData<String>("")
-    private var intervalometer_state = MutableLiveData<IntervalometerState>()
-    private var mode = MutableLiveData<String>()
+    private var bulb = OnlyChangeMutableLiveData<Boolean>(false)
+    private var connected = SingleLiveEvent<Boolean>()
+    private var camera_connected = OnlyChangeMutableLiveData<Boolean>(false)
+    private var cc_state = OnlyChangeMutableLiveData<String>("Disconnected")
+    private var download_enabled = OnlyChangeMutableLiveData<Boolean>(false)
+    private var capture_file = OnlyChangeMutableLiveData<String>("")
+    private var intervalometer_state = OnlyChangeMutableLiveData<IntervalometerState>()
+    private var mode = OnlyChangeMutableLiveData<String>()
 
     private var client = JsonTcpClient()
 }
@@ -308,5 +311,82 @@ class IntervalometerState(e : EventIntervalometerState? = null)
             progress = e.numCaptures!!
             total_captures = e.totalCaptures!!
         }
+    }
+}
+
+/**
+ * A lifecycle-aware observable that sends only new updates after subscription, used for events like
+ * navigation and Snackbar messages.
+ *
+ *
+ * This avoids a common problem with events: on configuration change (like rotation) an update
+ * can be emitted if the observer is active. This LiveData only calls the observable if there's an
+ * explicit call to setValue() or call().
+ *
+ *
+ * Note that only one observer is going to be notified of changes.
+ */
+class SingleLiveEvent<T>() : MutableLiveData<T>() {
+    private val mPending: AtomicBoolean = AtomicBoolean(false)
+
+    @MainThread
+    override fun observe(owner: LifecycleOwner, observer: Observer<in T?>) {
+        if (hasActiveObservers()) {
+            Log.w(TAG, "Multiple observers registered but only one will be notified of changes.")
+        }
+
+        // Observe the internal MutableLiveData
+        super.observe(owner, Observer { t ->
+            if (mPending.compareAndSet(true, false)) {
+                observer.onChanged(t)
+            }
+        })
+    }
+
+    @MainThread
+    override fun setValue(@Nullable t: T?) {
+        mPending.set(true)
+        super.setValue(t)
+    }
+
+    /**
+     * Used for cases where T is Void, to make calls cleaner.
+     */
+    @MainThread
+    fun call() {
+        value = null
+    }
+
+    companion object {
+        private const val TAG = "SingleLiveEvent"
+    }
+}
+
+class OnlyChangeMutableLiveData<T>(v: T? = null) : MutableLiveData<T>(v) {
+
+    @MainThread
+    override fun observe(owner: LifecycleOwner, observer: Observer<in T?>) {
+        // Observe the internal MutableLiveData
+        super.observe(owner, Observer { t ->
+            observer.onChanged(t)
+        })
+    }
+
+    @MainThread
+    override fun setValue(@Nullable t: T?) {
+        if(t != super.getValue())
+            super.setValue(t)
+    }
+
+    /**
+     * Used for cases where T is Void, to make calls cleaner.
+     */
+    @MainThread
+    fun call() {
+        value = null
+    }
+
+    companion object {
+        private const val TAG = "SingleLiveEvent"
     }
 }

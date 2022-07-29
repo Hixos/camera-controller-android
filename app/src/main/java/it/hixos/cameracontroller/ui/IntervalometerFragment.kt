@@ -2,11 +2,10 @@ package it.hixos.cameracontroller.ui
 
 import android.content.Context
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.github.razir.progressbutton.attachTextChangeAnimator
 import com.github.razir.progressbutton.bindProgressButton
@@ -14,7 +13,10 @@ import com.github.razir.progressbutton.hideProgress
 import com.github.razir.progressbutton.showProgress
 import it.hixos.cameracontroller.*
 import it.hixos.cameracontroller.databinding.FragmentIntervalometerBinding
-import it.hixos.cameracontroller.databinding.FragmentManualControlBinding
+import java.lang.Integer.max
+import kotlin.math.pow
+import kotlin.math.round
+
 
 class IntervalometerFragment : Fragment() {
     private var _binding: FragmentIntervalometerBinding? = null
@@ -41,7 +43,7 @@ class IntervalometerFragment : Fragment() {
         bindProgressButton(buttonStart)
         buttonStart.attachTextChangeAnimator()
 
-        val max_captures = resources.getInteger(R.integer.intervalometer_max_captures)
+        val max_captures = resources.getInteger(R.integer.intervalometer_max_captures_count)
 
         val crollerInterval = binding.crollerInterval
         val crollerNumCaptures = binding.crollerNumCaptures
@@ -55,13 +57,16 @@ class IntervalometerFragment : Fragment() {
             if(!started)
             {
                 val e = EventModeIntervalometer()
-                e.intervalms = binding.crollerInterval.progress * 1000
-                e.totalCaptures = binding.crollerNumCaptures.progress
-
-                if(e.intervalms == 0)
+                if(binding.crollerInterval.progress == 0)
                     e.intervalms = -1
-                if(e.totalCaptures == max_captures)
+                else
+                    e.intervalms = crollerToSec(binding.crollerInterval.progress) * 1000
+
+                if(binding.crollerNumCaptures.progress == max_captures)
                     e.totalCaptures = -1
+                else
+                    e.totalCaptures = crollerToNum(binding.crollerNumCaptures.progress)
+
                 socketViewModel.send(e)
                 buttonStart.setText(R.string.stop)
 
@@ -86,17 +91,20 @@ class IntervalometerFragment : Fragment() {
 
         socketViewModel.getCurrentMode().observe(viewLifecycleOwner) { mode ->
             if(socketViewModel.getIntervalometerState().value!!.state != "CamNotReady")
+            {
                 buttonStart.isEnabled = (mode == "Manual" || mode == "Intervalometer")
+            }
         }
 
         socketViewModel.getIntervalometerState().observe(viewLifecycleOwner) { state ->
 
-            val (rMin, rSec) = toMinuteSeconds(state.interval * (state.total_captures - state.progress))
+            val (rMin, rSec) = toMinuteSeconds(round(state.interval * (state.total_captures - state.progress) / 1000f).toInt())
 
-            if(state.interval < 0)
+            if(state.interval < 0) {
                 binding.textViewRemainingTime.setText("-")
-            else
+            }else {
                 binding.textViewRemainingTime.setText("%d min %d sec".format(rMin, rSec))
+            }
             if(state.total_captures < 0) {
                 binding.textViewRemainingTime.setText("∞")
                 progressBar.isIndeterminate = true
@@ -115,6 +123,8 @@ class IntervalometerFragment : Fragment() {
                 "CamNotReady" -> {
                     buttonStart.isEnabled = false
                     progressBar.isIndeterminate = false
+                    crollerInterval.isEnabled = true
+                    crollerNumCaptures.isEnabled = true
                     if(stopping){
                         buttonStart.hideProgress(R.string.start)
                         stopping = false
@@ -127,6 +137,8 @@ class IntervalometerFragment : Fragment() {
                 "Ready" -> {
                     buttonStart.isEnabled = true
                     progressBar.isIndeterminate = false
+                    crollerInterval.isEnabled = true
+                    crollerNumCaptures.isEnabled = true
                     if(stopping){
                         buttonStart.hideProgress(R.string.start)
                         stopping = false
@@ -137,20 +149,19 @@ class IntervalometerFragment : Fragment() {
                     }
                 }
                 else -> {
+                    crollerInterval.isEnabled = false
+                    crollerNumCaptures.isEnabled = false
                     buttonStart.isEnabled = true
                     buttonStart.setText(R.string.stop)
                     started = true
+                    crollerInterval.progress = msToCroller(state.interval)
+                    crollerNumCaptures.progress = numToCroller(state.total_captures)
                 }
             }
         }
 
         crollerInterval.setOnProgressChangedListener { progress ->
-            if(progress == 0) {
-                crollerInterval.label = "Instant"
-            }else{
-                val (min, sec) = toMinuteSeconds(progress * 1000)
-                crollerInterval.label = "%dm:%ds".format(min, sec)
-            }
+            updateIntervalCrollerLabel(progress)
         }
 
         crollerInterval.setOnProgressSetListener { progress ->
@@ -168,23 +179,97 @@ class IntervalometerFragment : Fragment() {
         }
 
         crollerNumCaptures.setOnProgressChangedListener { progress ->
-            if(progress == resources.getInteger(R.integer.intervalometer_max_captures))
-                crollerNumCaptures.label = "∞"
-            else
-                crollerNumCaptures.label = progress.toString()
+            updateNumCaptureCrollerLabel(progress)
         }
 
         socketViewModel.send(EventGetCurrentMode())
         return root
     }
 
-    fun toMinuteSeconds(ms: Int) : Pair<Int, Int>
+    fun toMinuteSeconds(sec: Int) : Pair<Int, Int>
     {
-        var sec = (ms / 1000f).toInt()
-        var min = (sec / 60f).toInt()
-        sec = sec - min*60
+        val min = (sec / 60f).toInt()
+        val s = sec - min * 60
 
-        return Pair(min, sec)
+        return Pair(min, s)
+    }
+
+    fun updateIntervalCrollerLabel(progress: Int)
+    {
+        if(progress == 0) {
+            binding.crollerInterval.label = "Instant"
+        }else{
+            val (min, sec) = toMinuteSeconds(crollerToSec(progress))
+            binding.crollerInterval.label = "%02dm:%02ds".format(min, sec)
+        }
+    }
+
+    fun updateNumCaptureCrollerLabel(progress: Int)
+    {
+        if(progress == resources.getInteger(R.integer.intervalometer_max_captures_count))
+            binding.crollerNumCaptures.label = "∞"
+        else
+            binding.crollerNumCaptures.label = crollerToNum(progress).toString()
+    }
+
+    private val p_tosec = 2.5f
+
+    fun crollerToSec(cv: Int,
+                    crollMax: Int = resources.getInteger(R.integer.intervalometer_max_interval_count),
+                     maxSec: Int = resources.getInteger(R.integer.intervalometer_max_interval)) : Int
+    {
+        val N = maxSec.toFloat() / crollMax.toFloat().pow(p_tosec)
+
+        val sec = max(round(N*cv.toFloat().pow(p_tosec)).toInt(), 1)
+        return when {
+            sec > 600 -> (round(sec/60f)*60).toInt()
+            sec > 300 -> (round(sec/30f)*30).toInt()
+            sec > 120 -> (round(sec/15f)*15).toInt()
+            sec > 60 -> (round(sec/10f)*10).toInt()
+            sec > 15 -> (round(sec/5f)*5).toInt()
+            else -> sec
+        }
+    }
+
+    private val p_tonum = 2.75f
+
+    fun crollerToNum(cv: Int,
+                     crollMax: Int = resources.getInteger(R.integer.intervalometer_max_captures_count) - 1,
+                     maxNum: Int = resources.getInteger(R.integer.intervalometer_max_captures)) : Int
+    {
+        val N = maxNum.toFloat() / crollMax.toFloat().pow(p_tonum)
+
+        val num = max(round(N*(cv.toFloat()).pow(p_tonum)).toInt(), 1)
+        return when {
+            num > 100 -> (round(num/10f)*10).toInt()
+            num > 50 -> (round(num/5f)*5).toInt()
+            else -> num
+        }
+    }
+
+    fun msToCroller(ms: Int,
+                    crollMax: Int = resources.getInteger(R.integer.intervalometer_max_interval_count),
+                    maxSec: Int = resources.getInteger(R.integer.intervalometer_max_interval)) : Int
+    {
+        if(ms > 0)
+        {
+            val N = maxSec.toFloat() * 1000 / crollMax.toFloat().pow(p_tosec)
+            return round((ms / N).pow(1 / p_tosec)).toInt()
+        }else{
+            return 0
+        }
+    }
+
+    fun numToCroller(num: Int,
+                    crollMax: Int = resources.getInteger(R.integer.intervalometer_max_captures_count) - 1,
+                    maxNum: Int = resources.getInteger(R.integer.intervalometer_max_captures)) : Int
+    {
+        if(num > 0) {
+            val N = maxNum.toFloat()  / crollMax.toFloat().pow(p_tonum)
+            return round((num.toFloat() / N).pow(1 / p_tonum)).toInt()
+        }else{
+            return crollMax + 1
+        }
     }
 
 }

@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">CameraController</string>
-    <string name="button_connect">Connect</string>
+    <string name="connect">Connect</string>
+    <string name="connecting">Connecting</string>
+    <string name="connected">Connected</string>
     <string name="server_ip_address">Server IP Address</string>
     <string name="connection_error">Connection error</string>
     <string name="mode_manual_mode">Manual Control</string>

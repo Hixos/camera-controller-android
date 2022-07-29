@@ -2,6 +2,8 @@
 <resources>
     <integer name="lightmeter_cmd_delay">500</integer>
     <integer name="task_done_display_duration">2500</integer>
-    <integer name="intervalometer_max_interval">600</integer>
-    <integer name="intervalometer_max_captures">101</integer>
+    <integer name="intervalometer_max_interval">3600</integer>
+    <integer name="intervalometer_max_interval_count">500</integer>
+    <integer name="intervalometer_max_captures">1000</integer>
+    <integer name="intervalometer_max_captures_count">501</integer>
 </resources>
