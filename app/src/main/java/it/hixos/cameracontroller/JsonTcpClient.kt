@@ -18,28 +18,31 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 
 class JsonTcpClient {
+    private val TAG = "JsonTCPClient"
+
     suspend fun connect(ip: String, port: Int, timeout: Int = 2000) : Boolean = withContext(Dispatchers.IO)
     {
         if(connected) {
-            Log.e("JsonTCPClient", "Already connected!")
+            Log.e(TAG, "Already connected!")
             return@withContext false
         }
         socket.close()
         socket = Socket()
+        socket.soTimeout = 5000
         try{
-            Log.d("JsonTCPClient", "Connecting... $ip:$port")
+            Log.d(TAG, "Connecting... $ip:$port")
             socket.connect(InetSocketAddress(ip, port), timeout)
             connected = true
-            Log.d("JsonTCPClient", "Connected!")
+            Log.d(TAG, "Connected!")
             return@withContext true
         }catch (sto : SocketTimeoutException)
         {
-            Log.d("JsonTCPClient", "Connection timeout")
+            Log.d(TAG, "Connection timeout")
             return@withContext false
         }
         catch (e : Exception)
         {
-            Log.e("JsonTCPClient", "Unmanaged exception: ${e.message}")
+            Log.e(TAG, "Unmanaged exception: ${e.message}")
             return@withContext false
         }
     }
@@ -50,7 +53,7 @@ class JsonTcpClient {
         socket.close()
 
         socket = Socket()
-        Log.i("JsonTCPClient", "Disconnected")
+        Log.i(TAG, "Disconnected")
     }
 
     fun receiver() : Flow<String> = flow {
@@ -63,20 +66,18 @@ class JsonTcpClient {
             if(!sockReadBytes(buf, istream, 4))
             {
                 disconnect()
-                Log.e("JsonTCPClient", "Error reading packet header")
+                Log.e(TAG, "Error reading packet header")
                 return@flow
             }
             val packetLen = java.nio.ByteBuffer.wrap(buf).getInt()
-            Log.d("JsonTCPClient", "Header ok. len = ${packetLen}")
 
             val pkt = ByteArray(packetLen)
             if(!sockReadBytes(pkt, istream, packetLen))
             {
                 disconnect()
-                Log.e("JsonTCPClient", "Error reading packet")
+                Log.e(TAG, "Error reading packet")
                 return@flow
             }
-            Log.d("JsonTCPClient", "Packet ok: val = ${String(pkt)}")
             emit(String(pkt))
         }
     }.flowOn(Dispatchers.IO)
@@ -84,9 +85,12 @@ class JsonTcpClient {
     suspend fun send(data: String, delayms: Long = 0) = withContext(Dispatchers.IO)
     {
         delay(delayms)
+
         val ostream = socket.getOutputStream()
         var buf_len = java.nio.ByteBuffer.allocate(4).putInt(data.length).array()
         var buf_data = data.toByteArray()
+
+//        Log.d(TAG, "Sending $buf_len bytes")
         mutex.withLock {
             ostream.write(buf_len)
             ostream.write(buf_data)
@@ -100,6 +104,7 @@ class JsonTcpClient {
         while(r < len)
         {
             val res = istream.read(buf, r, len - r)
+//            Log.d(TAG, "Received $res bytes")
             if(res < 0) {
                 return false
             }else {

@@ -20,4 +20,6 @@
     <string name="stop">Stop</string>
     <string name="stopping">Stopping</string>
     <string name="current_mode">Current Mode:</string>
+    <string name="reboot">Reboot</string>
+    <string name="restart_cc">Restart CC</string>
 </resources>

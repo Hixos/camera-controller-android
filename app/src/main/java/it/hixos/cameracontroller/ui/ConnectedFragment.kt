@@ -1,20 +1,20 @@
 package it.hixos.cameracontroller.ui
 
 import android.os.Bundle
+import android.view.*
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import it.hixos.cameracontroller.EventGetCurrentMode
-import it.hixos.cameracontroller.R
-import it.hixos.cameracontroller.SocketViewModel
+import it.hixos.cameracontroller.*
 import it.hixos.cameracontroller.databinding.FragmentConnectedBinding
 
 
@@ -83,5 +83,34 @@ class ConnectedFragment : Fragment() {
 
         socketViewModel.send(EventGetCurrentMode())
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // The usage of an interface lets you inject your own implementation
+        val menuHost: MenuHost = requireActivity()
+
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                // Add menu items here
+                menuInflater.inflate(R.menu.action_menu, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                when (menuItem.itemId)
+                {
+                    R.id.menu_restart_cc -> {
+                        socketViewModel.send(EventCmdRestart())
+                        Toast.makeText(requireContext(), "Restarting...", Toast.LENGTH_LONG)
+                    }
+
+                    R.id.menu_raspi_reboot -> {
+                        socketViewModel.send(EventCmdReboot())
+                        Toast.makeText(requireContext(), "Rebooting...", Toast.LENGTH_LONG)
+                    }
+                }
+                return true
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 }

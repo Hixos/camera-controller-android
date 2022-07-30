@@ -25,10 +25,7 @@ import com.github.razir.progressbutton.*
 import it.hixos.cameracontroller.R
 import it.hixos.cameracontroller.SocketViewModel
 import it.hixos.cameracontroller.databinding.FragmentConnectionBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.lang.NumberFormatException
 import java.net.*
 
@@ -40,6 +37,7 @@ public class ConnectionFragment : Fragment() {
     private var _binding: FragmentConnectionBinding? = null
 
     private var nsdManager: NsdManager? = null
+    private var connectJob : Job? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -133,6 +131,8 @@ public class ConnectionFragment : Fragment() {
     fun stopDiscovery()
     {
         try {
+            connectJob?.cancel()
+            connectJob = null
             nsdManager?.stopServiceDiscovery(discoveryListener)
         }catch (e: IllegalArgumentException)
         {
@@ -186,9 +186,12 @@ public class ConnectionFragment : Fragment() {
 
         override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
             Log.e(TAG, "Resolve Succeeded. $serviceInfo")
-
+            if(connectJob != null) {
+                connectJob?.cancel()
+                connectJob = null
+            }
             if (serviceInfo.serviceName.startsWith(NSD_SERVICE_NAME)) {
-                socketViewModel.connect(serviceInfo.host.hostAddress!!)
+                connectJob = socketViewModel.connectLoop(serviceInfo.host.hostAddress!!)
                 return
             }
         }

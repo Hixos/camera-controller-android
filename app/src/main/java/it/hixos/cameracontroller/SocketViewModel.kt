@@ -136,6 +136,23 @@ class SocketViewModel() : ViewModel() {
         }
     }
 
+    fun connectLoop(ip: String, port: Int = PORT) : Job
+    {
+        return viewModelScope.async(Dispatchers.Main)
+        {
+            val connection_result = viewModelScope.async {
+                while(!client.connect(ip, port))
+                {
+                    delay(1000)
+                }
+            }
+
+            connection_result.join()
+
+            connected.value = true
+        }
+    }
+
     fun disconnect()
     {
         client.disconnect()
@@ -200,12 +217,12 @@ class SocketViewModel() : ViewModel() {
             if (e != null)
                 handleEvent(e)
         }
-        Log.i("SocketViewModel", "Received packet: $packet")
+//        Log.i("SocketViewModel", "Received packet: $packet")
     }
 
     private fun handleEvent(e: Event)
     {
-        Log.d("SocketViewModel", "Handle Event")
+//        Log.d("SocketViewModel", "Handle Event")
         when(e)
         {
             is EventConfigValueShutterSpeed -> {
@@ -262,6 +279,9 @@ class SocketViewModel() : ViewModel() {
             is EventValueCurrentMode -> {
                 mode.value = e.mode
             }
+            is EventHeartBeat -> {
+                last_hb = System.currentTimeMillis()
+            }
         }
     }
 
@@ -292,6 +312,8 @@ class SocketViewModel() : ViewModel() {
     private var capture_file = OnlyChangeMutableLiveData<String>("")
     private var intervalometer_state = OnlyChangeMutableLiveData<IntervalometerState>()
     private var mode = OnlyChangeMutableLiveData<String>()
+
+    private var last_hb : Long = 0
 
     private var client = JsonTcpClient()
 }
