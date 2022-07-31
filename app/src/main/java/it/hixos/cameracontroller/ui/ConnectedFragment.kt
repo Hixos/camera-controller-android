@@ -108,6 +108,11 @@ class ConnectedFragment : Fragment() {
                         socketViewModel.send(EventCmdReboot())
                         Toast.makeText(requireContext(), "Rebooting...", Toast.LENGTH_LONG)
                     }
+
+                    R.id.menu_raspi_shutdown -> {
+                        socketViewModel.send(EventCmdShutdown())
+                        Toast.makeText(requireContext(), "Shutting down...", Toast.LENGTH_LONG)
+                    }
                 }
                 return true
             }

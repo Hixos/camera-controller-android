@@ -9,4 +9,8 @@
         android:id="@+id/menu_raspi_reboot"
         android:title="@string/reboot"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_raspi_shutdown"
+        android:title="@string/shutdown"
+        app:showAsAction="never" />
 </menu>
