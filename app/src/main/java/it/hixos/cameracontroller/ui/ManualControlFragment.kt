@@ -1,6 +1,7 @@
 package it.hixos.cameracontroller.ui
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -17,9 +18,10 @@ import it.hixos.cameracontroller.*
 import it.hixos.cameracontroller.R
 import it.hixos.cameracontroller.databinding.FragmentConnectedBinding
 import it.hixos.cameracontroller.databinding.FragmentManualControlBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import java.lang.Float.min
+import java.time.Duration
+import java.time.Instant
 
 class ManualControlFragment : Fragment() {
     private var _binding: FragmentManualControlBinding? = null
@@ -62,6 +64,8 @@ class ManualControlFragment : Fragment() {
             buttonCapture.isEnabled = mode == "Manual"
         }
 
+        var captureProgressJob : Job? = null
+
         socketViewModel.getCCState().observe(viewLifecycleOwner) { state ->
             when(state)
             {
@@ -71,6 +75,7 @@ class ManualControlFragment : Fragment() {
                 }
                 "Downloading" -> {
                     camera_busy = true
+                    binding.progressBarCapture.isIndeterminate = false
                     buttonCapture.showProgress { buttonTextRes = R.string.downloading }
                 }
                 "Error" -> {
@@ -98,6 +103,42 @@ class ManualControlFragment : Fragment() {
                     }
                 }
             }
+
+            if(state == "Capturing")
+            {
+                binding.progressBarCapture.isIndeterminate = false
+                val ss = socketViewModel.getShutterSpeed().value!!.toFloat() / 1000f
+                binding.progressBarCapture.max = (ss).toInt()
+                binding.progressBarCapture.visibility = View.VISIBLE
+                captureProgressJob = lifecycleScope.async(Dispatchers.Main)
+                {
+
+                    do {
+                        val dur = Duration.between(socketViewModel.getCaptureStartedTime().value, Instant.now()).toMillis()
+                        binding.textViewCaptureTime.setText("%.1f/%.1f s".format(min(dur.toFloat()/1000f,ss/1000f), ss/1000f))
+                        binding.progressBarCapture.progress = kotlin.math.min(dur.toInt(), binding.progressBarCapture.max)
+                        Log.d("Prog", "${binding.progressBarCapture.progress}/${binding.progressBarCapture.max}")
+                        delay(1000)
+                    }while (dur < ss)
+
+                    binding.progressBarCapture.isIndeterminate = true
+                }
+            } else {
+                captureProgressJob?.cancel()
+                captureProgressJob = null
+                binding.textViewCaptureTime.setText("")
+
+                if(state == "Downloading")
+                {
+                    binding.progressBarCapture.visibility = View.VISIBLE
+                    binding.progressBarCapture.isIndeterminate = true
+                }else{
+                    binding.progressBarCapture.visibility = View.INVISIBLE
+                    binding.progressBarCapture.isIndeterminate = false
+                }
+            }
+
+
 
             buttonCapture.isClickable = !camera_busy
         }

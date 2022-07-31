@@ -10,6 +10,7 @@ import kotlinx.coroutines.*
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -25,6 +26,11 @@ class SocketViewModel() : ViewModel() {
     fun getConnected() : LiveData<Boolean>
     {
         return connected
+    }
+
+    fun getCaptureStartedTime() : LiveData<Instant>
+    {
+        return capture_started_time
     }
 
     fun getShutterSpeed() : LiveData<Int>
@@ -282,6 +288,10 @@ class SocketViewModel() : ViewModel() {
             is EventHeartBeat -> {
                 last_hb = System.currentTimeMillis()
             }
+            is EventCameraCaptureStarted -> {
+                Log.d("dada", "ADdsad")
+                capture_started_time.value = Instant.now()
+            }
         }
     }
 
@@ -309,6 +319,8 @@ class SocketViewModel() : ViewModel() {
     private var camera_connected = OnlyChangeMutableLiveData<Boolean>(false)
     private var cc_state = OnlyChangeMutableLiveData<String>("Disconnected")
     private var download_enabled = OnlyChangeMutableLiveData<Boolean>(false)
+
+    private var capture_started_time = OnlyChangeMutableLiveData<Instant>()
     private var capture_file = OnlyChangeMutableLiveData<String>("")
     private var intervalometer_state = OnlyChangeMutableLiveData<IntervalometerState>()
     private var mode = OnlyChangeMutableLiveData<String>()
